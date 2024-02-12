@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/dariallab/srs/pkg/srs"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 )
@@ -21,7 +22,7 @@ func main() {
 		l.Fatal().Err(err).Msg("can't load confg")
 	}
 
-	server := &Server{}
+	server := &srs.Server{}
 	l.Info().Int("port", cfg.Port).Msg("starting server")
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", cfg.Port), server); err != nil {
 		l.Fatal().Err(err).Msg("can't start server")
