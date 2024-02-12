@@ -10,17 +10,16 @@ import (
 )
 
 func TestTutorServer(t *testing.T) {
-	server := &Server{}
+	server := Server{}
 
-	t.Run("open page - see hello", func(t *testing.T) {
-		req := newRequest(t, http.MethodGet, "/", nil)
+	t.Run("open page - see form", func(t *testing.T) {
+		req := newRequest(t, http.MethodGet, "/chat", nil)
 		resp := httptest.NewRecorder()
-		want := `hello`
 
 		server.ServeHTTP(resp, req)
 
 		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.Equal(t, want, resp.Body.String())
+		assert.Contains(t, resp.Body.String(), `<form hx-post="/chat"`, "form not found")
 	})
 }
 

@@ -22,7 +22,7 @@ func main() {
 		l.Fatal().Err(err).Msg("can't load confg")
 	}
 
-	server := &srs.Server{}
+	server := srs.NewServer(l)
 	l.Info().Int("port", cfg.Port).Msg("starting server")
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", cfg.Port), server); err != nil {
 		l.Fatal().Err(err).Msg("can't start server")
