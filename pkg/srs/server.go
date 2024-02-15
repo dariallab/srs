@@ -1,8 +1,8 @@
 package srs
 
 import (
+	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	static "github.com/dariallab/srs/pkg/templates"
@@ -44,13 +44,7 @@ func (s *Server) showChatHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) sendMessageHandler(w http.ResponseWriter, r *http.Request) {
-	upgrader := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-
-	ws, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgradeToWebSocket(w, r)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("can't upgrade to web socket")
 		return
@@ -69,16 +63,28 @@ func (s *Server) sendMessageHandler(w http.ResponseWriter, r *http.Request) {
 		var in wsMessage
 		if err = json.Unmarshal(m, &in); err != nil {
 			s.logger.Error().Err(err).Msg("can't unmarshal message from web socket")
-			return
+			continue
 		}
 
-		if err = ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`
-		<div id="chat-response" hx-swap-oob="beforeend"><p>%s</p></div>
-		<input id="input" type="text" name="message" placeholder="Type your message here" required autofocus>
-		`, in.Message))); err != nil {
+		var tpl bytes.Buffer
+		if err := static.TemplateChatResponse.Execute(&tpl, in); err != nil {
+			s.logger.Error().Err(err).Msg("can't execute chat response template")
+			continue
+		}
+
+		if err = ws.WriteMessage(websocket.TextMessage, tpl.Bytes()); err != nil {
 			s.logger.Error().Err(err).Msg("can't write message to web socket")
 			return
 		}
-
 	}
+}
+
+func upgradeToWebSocket(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error) {
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+
+	ws, err := upgrader.Upgrade(w, r, nil)
+	return ws, err
 }

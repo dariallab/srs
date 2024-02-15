@@ -1,0 +1,9 @@
+{{define "chat_message"}}
+<div id="chat_message" hx-swap-oob="beforeend">
+	<p>{{.Message}}</p>
+</div>
+{{end}}
+
+{{define "chat_input"}}
+<input id="chat_input" type="text" name="message" placeholder="Type your message here" required autofocus>
+{{end}}

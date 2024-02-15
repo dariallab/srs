@@ -1,0 +1,11 @@
+{{template "header" .}}
+
+<div hx-ext="ws" ws-connect="/message">
+	{{template "chat_message" .}}
+	<form ws-send>
+		{{template "chat_input" .}}
+		<button type="submit">Send</button>
+	</form>
+</div>
+
+{{template "footer" .}}
