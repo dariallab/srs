@@ -11,14 +11,12 @@
 </head>
 
 <body>
-    <div hx-ext="ws" ws-connect="/ws">
-        <form id="form" ws-send>
-            <input type="text" name="message" placeholder="Type your message here" required>
+    <div hx-ext="ws" ws-connect="/message">
+        <div id="chat-response" hx-swap-oob="beforeend"></div>
+        <form ws-send>
+            <input id="input" type="text" name="message" placeholder="Type your message here" required autofocus>
             <button type="submit">Send</button>
         </form>
-
-        <div id="chat-response" hx-swap-oob="beforeend"></div>
-
     </div>
 </body>
 

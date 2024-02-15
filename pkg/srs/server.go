@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dariallab/srs/pkg/static"
+	static "github.com/dariallab/srs/pkg/templates"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
@@ -26,7 +26,7 @@ func NewServer(logger zerolog.Logger) *Server {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /chat", s.showChatHandler)
-	mux.HandleFunc("/ws", s.sendMessageHandler)
+	mux.HandleFunc("GET /message", s.sendMessageHandler)
 	s.Handler = mux
 
 	return s
@@ -72,7 +72,10 @@ func (s *Server) sendMessageHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err = ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`<div id="chat-response" hx-swap-oob="beforeend"><p>%s</p></dev>`, in.Message))); err != nil {
+		if err = ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`
+		<div id="chat-response" hx-swap-oob="beforeend"><p>%s</p></div>
+		<input id="input" type="text" name="message" placeholder="Type your message here" required autofocus>
+		`, in.Message))); err != nil {
 			s.logger.Error().Err(err).Msg("can't write message to web socket")
 			return
 		}
