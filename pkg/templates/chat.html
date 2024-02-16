@@ -1,11 +1,13 @@
 {{template "header" .}}
 
-<div hx-ext="ws" ws-connect="/message">
-	{{template "chat_message" .}}
-	<form ws-send>
-		{{template "chat_input" .}}
-		<button type="submit">Send</button>
-	</form>
+<div class="flex justify-center items-center">
+	<div hx-ext=" ws" ws-connect="/message">
+		{{template "chat_message" .}}
+		<form ws-send hx-trigger="keyup[keyCode==13]">
+			{{template "chat_input" .}}
+			<button type="submit">Send</button>
+		</form>
+	</div>
 </div>
 
 {{template "footer" .}}

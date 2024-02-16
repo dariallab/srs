@@ -1,10 +1,20 @@
 {{define "chat_message"}}
 <div id="chat_message" hx-swap-oob="beforeend">
+	{{if .Original}}
 	<p>{{.Original}}</p>
-	<p>{{.Corrected}}</p>
+	{{end}}
+
+	{{if .Diff}}
+	<p>
+		{{range .Diff}}{{if eq .Type 0}}{{.Text}}{{ else if eq .Type -1}}<span class="bg-red-200">{{.Text}}</span>{{end}}{{end}}
+	</p>
+	<p>
+		{{range .Diff}}{{if eq .Type 0}}{{.Text}}{{ else if eq .Type 1}}<span class="bg-green-200">{{.Text}}</span>{{end}}{{end}}
+	</p>
+	{{end}}
 </div>
 {{end}}
 
 {{define "chat_input"}}
-<input id="chat_input" type="text" name="message" placeholder="Type your message here" required autofocus>
+<textarea id="chat_input" name="message" rows="1" required autofocus placeholder="Type your message here"></textarea>
 {{end}}

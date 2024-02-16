@@ -25,7 +25,7 @@ func TestTutorServer(t *testing.T) {
 		server.ServeHTTP(resp, req)
 
 		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.Contains(t, resp.Body.String(), `<form ws-send>`, "websocket tags are not found")
+		assert.Contains(t, resp.Body.String(), `<form ws-send`, "websocket tags are not found")
 	})
 
 	t.Run("send message - return response via websockets", func(t *testing.T) {
@@ -39,9 +39,22 @@ func TestTutorServer(t *testing.T) {
 		defer srv.Close()
 
 		got := wsReadMessage(t, ws)
+		wantOriginalMsg := `<textarea id="chat_input" name="message" rows="1" required autofocus placeholder="Type your message here"></textarea><div id="chat_message" hx-swap-oob="beforeend"><p>hello</p></div>`
+		assert.Equal(t, wantOriginalMsg, got)
 
-		want := `<input id="chat_input" type="text" name="message" placeholder="Type your message here" required autofocus><div id="chat_message" hx-swap-oob="beforeend"><p>hello</p><p>hallo</p></div>`
-		assert.Equal(t, want, got)
+		got = wsReadMessage(t, ws)
+		wantDiffMsg := `<div id="chat_message" hx-swap-oob="beforeend"><p>h<span class="bg-red-200">e</span>llo</p><p>h<span class="bg-green-200">a</span>llo</p></div>`
+		assert.Equal(t, wantDiffMsg, got)
+	})
+
+	t.Run("serve static", func(t *testing.T) {
+		server := NewServer(&ai.Mock{}, zerolog.New(os.Stdout))
+		req := newRequest(t, http.MethodGet, "/input.css", nil)
+		resp := httptest.NewRecorder()
+
+		server.ServeHTTP(resp, req)
+
+		assert.Equal(t, http.StatusOK, resp.Code)
 	})
 }
 

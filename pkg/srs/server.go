@@ -5,10 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/dariallab/srs/pkg/templates"
+	"github.com/dariallab/srs/pkg/templates/static"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
+	dmp "github.com/sergi/go-diff/diffmatchpatch"
 )
 
 type wsChatInput struct {
@@ -16,8 +19,8 @@ type wsChatInput struct {
 }
 
 type wsChatResponse struct {
-	Original  string `json:"original"`
-	Corrected string `json:"corrected"`
+	Original string
+	Diff     []dmp.Diff
 }
 
 type AI interface {
@@ -37,8 +40,11 @@ func NewServer(ai AI, logger zerolog.Logger) *Server {
 	}
 
 	mux := http.NewServeMux()
+	staticServer := http.FileServer(http.FS(static.FS))
+	mux.Handle("/", staticServer)
 	mux.HandleFunc("GET /chat", s.showChatHandler)
 	mux.HandleFunc("GET /message", s.sendMessageHandler)
+
 	s.Handler = mux
 
 	return s
@@ -51,7 +57,8 @@ func (s *Server) showChatHandler(w http.ResponseWriter, r *http.Request) {
 	t := templates.TemplateChat
 	if err := t.Execute(w, nil); err != nil {
 		s.logger.Error().Err(err).Msg("can't execute template")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "There's an error, try again later", http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -80,25 +87,48 @@ func (s *Server) sendMessageHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		corrected, err := s.ai.Correct(ctx, in.Message)
+		input := strings.ReplaceAll(in.Message, "\n", "")
+
+		originalOut := &wsChatResponse{
+			Original: input,
+		}
+
+		var originalTpl bytes.Buffer
+		if err := templates.TemplateChatInput.Execute(&originalTpl, nil); err != nil {
+			s.logger.Error().Err(err).Msg("can't execute chat response template")
+			return
+		}
+		if err := templates.TemplateChatMessage.Execute(&originalTpl, originalOut); err != nil {
+			s.logger.Error().Err(err).Msg("can't execute chat response template")
+			return
+		}
+
+		if err = ws.WriteMessage(websocket.TextMessage, originalTpl.Bytes()); err != nil {
+			s.logger.Error().Err(err).Msg("can't write message to web socket")
+			return
+		}
+
+		corrected, err := s.ai.Correct(ctx, input)
 		if err != nil {
 			s.logger.Error().Err(err).Msg("can't correct message")
 		}
 
-		out := &wsChatResponse{
-			Original:  in.Message,
-			Corrected: corrected,
-		}
+		if corrected != "" {
+			diff := Diff(input, corrected)
+			out := &wsChatResponse{
+				Diff: diff,
+			}
 
-		var tpl bytes.Buffer
-		if err := templates.TemplateChatResponse.Execute(&tpl, out); err != nil {
-			s.logger.Error().Err(err).Msg("can't execute chat response template")
-			continue
-		}
+			var responseTpl bytes.Buffer
+			if err := templates.TemplateChatMessage.Execute(&responseTpl, out); err != nil {
+				s.logger.Error().Err(err).Msg("can't execute chat response template")
+				return
+			}
 
-		if err = ws.WriteMessage(websocket.TextMessage, tpl.Bytes()); err != nil {
-			s.logger.Error().Err(err).Msg("can't write message to web socket")
-			return
+			if err = ws.WriteMessage(websocket.TextMessage, responseTpl.Bytes()); err != nil {
+				s.logger.Error().Err(err).Msg("can't write message to web socket")
+				return
+			}
 		}
 	}
 }
