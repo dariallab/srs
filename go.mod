@@ -6,6 +6,7 @@ require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.32.0
+	github.com/sashabaranov/go-openai v1.19.3
 	github.com/stretchr/testify v1.8.4
 )
 

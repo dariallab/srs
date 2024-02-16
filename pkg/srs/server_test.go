@@ -9,15 +9,16 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dariallab/srs/pkg/ai"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTutorServer(t *testing.T) {
-	server := NewServer(zerolog.New(os.Stdout))
 
 	t.Run("open page - see form", func(t *testing.T) {
+		server := NewServer(&ai.Mock{}, zerolog.New(os.Stdout))
 		req := newRequest(t, http.MethodGet, "/chat", nil)
 		resp := httptest.NewRecorder()
 
@@ -28,13 +29,18 @@ func TestTutorServer(t *testing.T) {
 	})
 
 	t.Run("send message - return response via websockets", func(t *testing.T) {
+		server := NewServer(&ai.Mock{
+			CorrectionFn: func(s string) (string, error) {
+				return "hallo", nil
+			},
+		}, zerolog.New(os.Stdout))
 		srv, ws := wsWriteMessage(t, server, "/message", "hello")
 		defer ws.Close()
 		defer srv.Close()
 
 		got := wsReadMessage(t, ws)
 
-		want := `<input id="chat_input" type="text" name="message" placeholder="Type your message here" required autofocus><div id="chat_message" hx-swap-oob="beforeend"><p>hello</p></div>`
+		want := `<input id="chat_input" type="text" name="message" placeholder="Type your message here" required autofocus><div id="chat_message" hx-swap-oob="beforeend"><p>hello</p><p>hallo</p></div>`
 		assert.Equal(t, want, got)
 	})
 }
