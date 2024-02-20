@@ -1,11 +1,24 @@
 {{template "header" .}}
 
-<div class="flex justify-center items-center">
-	<div hx-ext=" ws" ws-connect="/message">
-		{{template "chat_message" .}}
+<div class="h-screen w-1/2 mx-auto flex flex-col py-6">
+
+	<!-- chat messages -->
+	<div class="flex-1 overflow-auto bg-slate-50 rounded-t-md">
+		{{template "chat_messages" .}}
+	</div>
+
+	<!-- chat input -->
+	<div hx-ext=" ws" ws-connect="/message" class="bg-slate-300 rounded-b-md">
 		<form ws-send hx-trigger="keyup[keyCode==13]">
-			{{template "chat_input" .}}
-			<button type="submit">Send</button>
+			<div class="flex p-6">
+				{{template "chat_input" .}}
+				<button type="submit" class="fill-slate-400">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+						<path d="M.989 8 .064 2.68a1.342 1.342 0 0 1 1.85-1.462l13.402 5.744a1.13 1.13 0 0 1 0 2.076L1.913 14.782a1.343 1.343 0 0 1-1.85-1.463L.99 8Zm.603-5.288L2.38 7.25h4.87a.75.75 0 0 1 0 1.5H2.38l-.788 4.538L13.929 8Z">
+						</path>
+					</svg>
+				</button>
+			</div>
 		</form>
 	</div>
 </div>

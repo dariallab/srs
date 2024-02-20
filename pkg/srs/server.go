@@ -40,10 +40,12 @@ func NewServer(ai AI, logger zerolog.Logger) *Server {
 	}
 
 	mux := http.NewServeMux()
-	staticServer := http.FileServer(http.FS(static.FS))
-	mux.Handle("/", staticServer)
-	mux.HandleFunc("GET /chat", s.showChatHandler)
+
+	mux.HandleFunc("GET /", s.showChatHandler)
 	mux.HandleFunc("GET /message", s.sendMessageHandler)
+
+	staticServer := http.FileServer(http.FS(static.FS))
+	mux.Handle("GET /static/", http.StripPrefix("/static/", staticServer))
 
 	s.Handler = mux
 
@@ -98,7 +100,7 @@ func (s *Server) sendMessageHandler(w http.ResponseWriter, r *http.Request) {
 			s.logger.Error().Err(err).Msg("can't execute chat response template")
 			return
 		}
-		if err := templates.TemplateChatMessage.Execute(&originalTpl, originalOut); err != nil {
+		if err := templates.TemplateChatMessages.Execute(&originalTpl, originalOut); err != nil {
 			s.logger.Error().Err(err).Msg("can't execute chat response template")
 			return
 		}
@@ -120,7 +122,7 @@ func (s *Server) sendMessageHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			var responseTpl bytes.Buffer
-			if err := templates.TemplateChatMessage.Execute(&responseTpl, out); err != nil {
+			if err := templates.TemplateChatMessages.Execute(&responseTpl, out); err != nil {
 				s.logger.Error().Err(err).Msg("can't execute chat response template")
 				return
 			}

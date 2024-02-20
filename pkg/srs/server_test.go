@@ -19,7 +19,7 @@ func TestTutorServer(t *testing.T) {
 
 	t.Run("open page - see form", func(t *testing.T) {
 		server := NewServer(&ai.Mock{}, zerolog.New(os.Stdout))
-		req := newRequest(t, http.MethodGet, "/chat", nil)
+		req := newRequest(t, http.MethodGet, "/", nil)
 		resp := httptest.NewRecorder()
 
 		server.ServeHTTP(resp, req)
@@ -39,17 +39,17 @@ func TestTutorServer(t *testing.T) {
 		defer srv.Close()
 
 		got := wsReadMessage(t, ws)
-		wantOriginalMsg := `<textarea id="chat_input" name="message" rows="1" required autofocus placeholder="Type your message here"></textarea><div id="chat_message" hx-swap-oob="beforeend"><p>hello</p></div>`
+		wantOriginalMsg := `<textarea id="chat_input" name="message" oninput="this.style.height = ''; this.style.height = this.scrollHeight +'px'" rows="1" required autofocus placeholder="Type your message here"class="flex-1 mr-2 resize-none bg-slate-300 focus:border-none focus:outline-none"></textarea><div id="chat_messages" hx-swap-oob="afterbegin" class="h-full flex flex-col-reverse overflow-auto flex-1 p-6 mb-auto"><p>hello</p></div>`
 		assert.Equal(t, wantOriginalMsg, got)
 
 		got = wsReadMessage(t, ws)
-		wantDiffMsg := `<div id="chat_message" hx-swap-oob="beforeend"><p>h<span class="bg-red-200">e</span>llo</p><p>h<span class="bg-green-200">a</span>llo</p></div>`
+		wantDiffMsg := `<div id="chat_messages" hx-swap-oob="afterbegin" class="h-full flex flex-col-reverse overflow-auto flex-1 p-6 mb-auto"><p>h<span class="bg-red-200">e</span>llo</p><p>h<span class="bg-green-200">a</span>llo</p></div>`
 		assert.Equal(t, wantDiffMsg, got)
 	})
 
 	t.Run("serve static", func(t *testing.T) {
 		server := NewServer(&ai.Mock{}, zerolog.New(os.Stdout))
-		req := newRequest(t, http.MethodGet, "/input.css", nil)
+		req := newRequest(t, http.MethodGet, "/src/input.css", nil)
 		resp := httptest.NewRecorder()
 
 		server.ServeHTTP(resp, req)

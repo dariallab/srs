@@ -9,7 +9,7 @@ import (
 var FS embed.FS
 
 var (
-	TemplateChat        = template.Must(template.ParseFS(FS, "chat.html", "components/*.html"))
-	TemplateChatInput   = template.Must(template.ParseFS(FS, "chat_input.html", "components/chat.html"))
-	TemplateChatMessage = template.Must(template.ParseFS(FS, "chat_message.html", "components/chat.html"))
+	TemplateChat         = template.Must(template.ParseFS(FS, "chat.html", "components/*.html"))
+	TemplateChatInput    = template.Must(template.ParseFS(FS, "chat_input.html", "components/chat_input.html"))
+	TemplateChatMessages = template.Must(template.ParseFS(FS, "chat_messages.html", "components/chat_messages.html"))
 )
