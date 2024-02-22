@@ -1,19 +1,23 @@
 {{define "chat_messages"}}
 
-<div id="chat_messages" hx-swap-oob="afterbegin" class="h-full flex flex-col-reverse overflow-auto flex-1 p-6 mb-auto">
+<div id="chat_messages" hx-swap-oob="afterbegin" class="h-full flex flex-col-reverse overflow-auto flex-1 py-6 mb-auto">
 	{{if .Original}}
-	<p>{{.Original}}</p>
+	<p class="w-1/2 mx-4 mt-4 p-4 rounded-t-md shadow mr-auto bg-slate-300 ">{{.Original}}</p>
 	{{end}}
+
 
 	{{if .Diff}}
-	<p>
-		{{range .Diff}}{{if eq .Type 0}}{{.Text}}{{ else if eq .Type -1}}<span class="bg-red-200">{{.Text}}</span>{{end}}{{end}}
-	</p>
-	<p>
-		{{range .Diff}}{{if eq .Type 0}}{{.Text}}{{ else if eq .Type 1}}<span class="bg-green-200">{{.Text}}</span>{{end}}{{end}}
+	<p class="diff w-1/2 mx-4 p-4 rounded-b-md shadow mr-auto bg-slate-100 text-slate-500 text-sm">
+		{{range .Diff}}{{if eq .Type 0}}{{.Text}}{{ else if eq .Type -1}}<span class="bg-red-100">{{.Text}}</span>{{end}}{{end}}
+		<br>
+		{{range .Diff}}{{if eq .Type 0}}{{.Text}}{{ else if eq .Type 1}}<span class="bg-green-100">{{.Text}}</span>{{end}}{{end}}
 	</p>
 	{{end}}
 
+
+	{{if .Response}}
+	<p class="w-1/2 m-4 p-4 rounded-md shadow ml-auto  bg-slate-100">{{.Response}}</p>
+	{{end}}
 </div>
 
 {{end}}

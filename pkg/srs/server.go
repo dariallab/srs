@@ -21,10 +21,12 @@ type wsChatInput struct {
 type wsChatResponse struct {
 	Original string
 	Diff     []dmp.Diff
+	Response string
 }
 
 type AI interface {
 	Correct(ctx context.Context, input string) (string, error)
+	Response(ctx context.Context, input string) (string, error)
 }
 
 type Server struct {
@@ -97,11 +99,11 @@ func (s *Server) sendMessageHandler(w http.ResponseWriter, r *http.Request) {
 
 		var originalTpl bytes.Buffer
 		if err := templates.TemplateChatInput.Execute(&originalTpl, nil); err != nil {
-			s.logger.Error().Err(err).Msg("can't execute chat response template")
+			s.logger.Error().Err(err).Msg("can't execute chat input template")
 			return
 		}
 		if err := templates.TemplateChatMessages.Execute(&originalTpl, originalOut); err != nil {
-			s.logger.Error().Err(err).Msg("can't execute chat response template")
+			s.logger.Error().Err(err).Msg("can't execute chat response template with original")
 			return
 		}
 
@@ -123,7 +125,7 @@ func (s *Server) sendMessageHandler(w http.ResponseWriter, r *http.Request) {
 
 			var responseTpl bytes.Buffer
 			if err := templates.TemplateChatMessages.Execute(&responseTpl, out); err != nil {
-				s.logger.Error().Err(err).Msg("can't execute chat response template")
+				s.logger.Error().Err(err).Msg("can't execute chat response template with diff")
 				return
 			}
 
@@ -132,6 +134,30 @@ func (s *Server) sendMessageHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+
+		response, err := s.ai.Response(ctx, input)
+		if err != nil {
+			s.logger.Error().Err(err).Msg("can't respond to the message")
+			return
+		}
+
+		if response != "" {
+			out := &wsChatResponse{
+				Response: response,
+			}
+
+			var responseTpl bytes.Buffer
+			if err := templates.TemplateChatMessages.Execute(&responseTpl, out); err != nil {
+				s.logger.Error().Err(err).Msg("can't execute chat response template with response")
+				return
+			}
+
+			if err = ws.WriteMessage(websocket.TextMessage, responseTpl.Bytes()); err != nil {
+				s.logger.Error().Err(err).Msg("can't write message to web socket")
+				return
+			}
+		}
+
 	}
 }
 

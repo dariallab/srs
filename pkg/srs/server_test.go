@@ -33,18 +33,25 @@ func TestTutorServer(t *testing.T) {
 			CorrectionFn: func(s string) (string, error) {
 				return "hallo", nil
 			},
+			ResponseFn: func(s string) (string, error) {
+				return "response", nil
+			},
 		}, zerolog.New(os.Stdout))
 		srv, ws := wsWriteMessage(t, server, "/message", "hello")
 		defer ws.Close()
 		defer srv.Close()
 
 		got := wsReadMessage(t, ws)
-		wantOriginalMsg := `<textarea id="chat_input" name="message" oninput="this.style.height = ''; this.style.height = this.scrollHeight +'px'" rows="1" required autofocus placeholder="Type your message here"class="flex-1 mr-2 resize-none bg-slate-300 focus:border-none focus:outline-none"></textarea><div id="chat_messages" hx-swap-oob="afterbegin" class="h-full flex flex-col-reverse overflow-auto flex-1 p-6 mb-auto"><p>hello</p></div>`
+		wantOriginalMsg := `<textarea id="chat_input" name="message" oninput="this.style.height = ''; this.style.height = this.scrollHeight +'px'" rows="1" required autofocus placeholder="Type your message here"class="flex-1 mr-2 resize-none bg-slate-300 focus:border-none focus:outline-none"></textarea><div id="chat_messages" hx-swap-oob="afterbegin" class="h-full flex flex-col-reverse overflow-auto flex-1 py-6 mb-auto"><p class="w-1/2 mx-4 mt-4 p-4 rounded-t-md shadow mr-auto bg-slate-300 ">hello</p></div>`
 		assert.Equal(t, wantOriginalMsg, got)
 
 		got = wsReadMessage(t, ws)
-		wantDiffMsg := `<div id="chat_messages" hx-swap-oob="afterbegin" class="h-full flex flex-col-reverse overflow-auto flex-1 p-6 mb-auto"><p>h<span class="bg-red-200">e</span>llo</p><p>h<span class="bg-green-200">a</span>llo</p></div>`
+		wantDiffMsg := `<div id="chat_messages" hx-swap-oob="afterbegin" class="h-full flex flex-col-reverse overflow-auto flex-1 py-6 mb-auto"><p class="diff w-1/2 mx-4 p-4 rounded-b-md shadow mr-auto bg-slate-100 text-slate-500 text-sm">h<span class="bg-red-100">e</span>llo<br>h<span class="bg-green-100">a</span>llo</p></div>`
 		assert.Equal(t, wantDiffMsg, got)
+
+		got = wsReadMessage(t, ws)
+		wantResponseMsg := `<div id="chat_messages" hx-swap-oob="afterbegin" class="h-full flex flex-col-reverse overflow-auto flex-1 py-6 mb-auto"><p class="w-1/2 m-4 p-4 rounded-md shadow ml-auto  bg-slate-100">response</p></div>`
+		assert.Equal(t, wantResponseMsg, got)
 	})
 
 	t.Run("serve static", func(t *testing.T) {
