@@ -1,0 +1,11 @@
+{{template "header" .}}
+
+<div class="w-48 mx-auto mt-48 flex flex-col font-thin">
+	<h2 class="mb-4">Login:</h2>
+	<div id="g_id_onload" data-client_id="{{.ClientID}}" data-context="use" data-ux_mode="redirect" data-login_uri="{{.CallbackURL}}" data-auto_prompt="false">
+	</div>
+	<div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left">
+	</div>
+</div>
+
+{{template "footer" .}}

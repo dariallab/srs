@@ -6,15 +6,12 @@ import (
 	"os"
 
 	"github.com/dariallab/srs/pkg/ai"
+	"github.com/dariallab/srs/pkg/auth"
 	"github.com/dariallab/srs/pkg/srs"
+	"github.com/gorilla/sessions"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 )
-
-type Config struct {
-	Port        int    `envconfig:"PORT" required:"true"`
-	OpenAIToken string `envconfig:"OPENAI_TOKEN" required:"true"`
-}
 
 func main() {
 	l := zerolog.New(os.Stdout)
@@ -24,10 +21,13 @@ func main() {
 		l.Fatal().Err(err).Msg("can't load confg")
 	}
 
-	// ai := ai.New(cfg.OpenAIToken)
-	ai := ai.NewMock()
+	ai := ai.New(cfg.OpenAIToken)
 
-	server := srs.NewServer(ai, l)
+	auth := auth.New(cfg.Auth.ClientID, cfg.Auth.CallbackURL)
+
+	store := sessions.NewCookieStore([]byte(cfg.Auth.SessionKey))
+
+	server := srs.NewServer(ai, auth, store, l)
 	l.Info().Int("port", cfg.Port).Msg("starting server")
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", cfg.Port), server); err != nil {
 		l.Fatal().Err(err).Msg("can't start server")

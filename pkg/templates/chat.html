@@ -8,7 +8,7 @@
 	</div>
 
 	<!-- chat input -->
-	<div hx-ext=" ws" ws-connect="/message" class="bg-slate-300 rounded-b-md">
+	<div hx-ext="ws" ws-connect="/message" class="bg-slate-300 rounded-b-md">
 		<form ws-send hx-trigger="keyup[keyCode==13]">
 			<div class="flex p-6">
 				{{template "chat_input" .}}

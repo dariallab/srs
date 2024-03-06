@@ -6,6 +6,11 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
+type AI interface {
+	Correct(ctx context.Context, input string) (string, error)
+	Response(ctx context.Context, input string) (string, error)
+}
+
 type Client struct {
 	client *openai.Client
 }
@@ -40,6 +45,7 @@ func (c *Client) Correct(ctx context.Context, input string) (string, error) {
 
 	return resp.Choices[0].Message.Content, nil
 }
+
 func (c *Client) Response(ctx context.Context, input string) (string, error) {
 	resp, err := c.client.CreateChatCompletion(
 		ctx,
